@@ -10,6 +10,7 @@ import com.rwanda.erp.repository.DeductionRepository;
 import com.rwanda.erp.repository.EmploymentRepository;
 import com.rwanda.erp.repository.MessageRepository;
 import com.rwanda.erp.repository.PayslipRepository;
+import com.rwanda.erp.service.EmailService;
 import com.rwanda.erp.service.PayslipService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,9 +29,11 @@ public class PayslipServiceImpl implements PayslipService {
     private final EmploymentRepository employmentRepository;
     private final DeductionRepository deductionRepository;
     private final MessageRepository messageRepository;
+    private final EmailService emailService;
 
     private static final int SCALE = 2; // For BigDecimal calculations
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+    private static final String INSTITUTION_NAME = "Rwanda Government";
 
     @Override
     @Transactional
@@ -172,10 +175,11 @@ public class PayslipServiceImpl implements PayslipService {
 
     // This method simulates message creation. Actual email sending would be external.
     private void createPayslipMessage(Payslip payslip) {
-        String messageText = String.format("Dear %s, your salary for %d/%d amounting to %s has been credited to your account %s successfully.",
+        String messageText = String.format("Dear %s, your salary for %d/%d from %s amounting to %s has been credited to your account %s successfully.",
                 payslip.getEmployee().getFirstName(),
                 payslip.getMonth(),
                 payslip.getYear(),
+                INSTITUTION_NAME,
                 payslip.getNetSalary().toPlainString(),
                 payslip.getEmployee().getCode() // Assuming employee code is the account ID
         );
@@ -189,7 +193,9 @@ public class PayslipServiceImpl implements PayslipService {
 
         messageRepository.save(message);
 
-        // TODO: Integrate with actual email sending mechanism
+        // Send email to employee
+        String subject = String.format("Salary Credited for %d/%d", payslip.getMonth(), payslip.getYear());
+        emailService.sendEmail(payslip.getEmployee().getEmail(), subject, messageText);
     }
 
     @Override
