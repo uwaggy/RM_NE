@@ -11,4 +11,5 @@ public interface EmployeeService {
     EmployeeResponse getEmployeeById(String code);
     EmployeeResponse updateEmployee(String code, EmployeeRequest employeeRequest);
     void deleteEmployee(String code);
+    EmployeeResponse getEmployeeByEmail(String email);
 } 

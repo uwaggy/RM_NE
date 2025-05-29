@@ -10,4 +10,5 @@ public interface PayslipService {
     PayslipResponse getPayslipById(String id);
     List<PayslipResponse> getEmployeePayslips(String employeeCode);
     PayslipResponse approvePayslip(String id);
+    byte[] downloadPayslip(String id, String authenticatedUserEmail);
 } 

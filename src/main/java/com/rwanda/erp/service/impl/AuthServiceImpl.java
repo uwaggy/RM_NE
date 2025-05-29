@@ -2,7 +2,6 @@ package com.rwanda.erp.service.impl;
 
 import com.rwanda.erp.dto.JwtResponse;
 import com.rwanda.erp.dto.LoginRequest;
-import com.rwanda.erp.dto.RegisterRequest;
 import com.rwanda.erp.model.Employee;
 import com.rwanda.erp.repository.EmployeeRepository;
 import com.rwanda.erp.security.JwtTokenUtil;
@@ -48,32 +47,4 @@ public class AuthServiceImpl implements AuthService {
 
         return new JwtResponse(token, "Bearer", employee.getCode(), employee.getEmail());
     }
-
-    @Override
-    @Transactional
-    public void registerUser(RegisterRequest registerRequest) {
-        if (employeeRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email already exists"); // TODO: Custom exception handling
-        }
-
-        // Create new employee's account
-        Employee employee = new Employee();
-        employee.setFirstName(registerRequest.getFirstName());
-        employee.setLastName(registerRequest.getLastName());
-        employee.setEmail(registerRequest.getEmail());
-        employee.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        employee.setMobile(registerRequest.getMobile());
-        employee.setDateOfBirth(registerRequest.getDateOfBirth());
-        employee.setStatus(registerRequest.getStatus());
-
-        // Set roles - if no roles are provided, assign a default role like 'EMPLOYEE'
-        Set<String> roles = registerRequest.getRoles();
-        if (roles == null || roles.isEmpty()) {
-            roles = new HashSet<>();
-            roles.add("EMPLOYEE");
-        }
-         employee.setRoles(roles);
-
-        employeeRepository.save(employee);
-    }
-} 
+}

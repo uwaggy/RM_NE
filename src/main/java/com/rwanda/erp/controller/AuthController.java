@@ -2,7 +2,7 @@ package com.rwanda.erp.controller;
 
 import com.rwanda.erp.dto.JwtResponse;
 import com.rwanda.erp.dto.LoginRequest;
-import com.rwanda.erp.dto.RegisterRequest;
+
 import com.rwanda.erp.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,18 +25,6 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
-
-    @Operation(summary = "Register a new user (employee)", description = "Registers a new employee account.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User registered successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "409", description = "Email already exists")
-    })
-    @PostMapping("/register")
-    public ResponseEntity<Void> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        authService.registerUser(registerRequest);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
 
     @Operation(summary = "Authenticate user and get JWT token", description = "Logs in a user and returns a JWT token.")
     @ApiResponses(value = {

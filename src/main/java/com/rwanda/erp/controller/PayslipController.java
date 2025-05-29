@@ -7,8 +7,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -86,5 +90,29 @@ public class PayslipController {
     public ResponseEntity<PayslipResponse> approvePayslip(@PathVariable String id) {
         PayslipResponse approvedPayslip = payslipService.approvePayslip(id);
         return ResponseEntity.ok(approvedPayslip);
+    }
+
+    @Operation(summary = "Download payslip by ID", description = "Allows an employee to download their own payslip, and ADMIN/MANAGER to download any payslip.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Payslip downloaded successfully"),
+            @ApiResponse(responseCode = "404", description = "Payslip not found"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient privileges or not authorized to download this payslip")
+    })
+    @GetMapping("/{id}/download")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or (hasRole('EMPLOYEE') and authentication.principal.username == @employeeRepository.findById(@payslipRepository.findById(#id).orElse(new com.rwanda.erp.model.Payslip()).getEmployee().getCode()).orElse(new com.rwanda.erp.model.Employee()).getEmail())") // Complex check: ADMIN/MANAGER or EMPLOYEE can download their own
+    public ResponseEntity<byte[]> downloadPayslip(@PathVariable String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedUserEmail = authentication.getName();
+
+        byte[] payslipContent = payslipService.downloadPayslip(id, authenticatedUserEmail);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM); // Generic binary content type
+        // You might want to set a more specific content type if you implement PDF/Excel generation
+        // headers.setContentType(MediaType.APPLICATION_PDF); or MediaType.valueOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        headers.setContentDispositionFormData("attachment", "payslip_" + id + ".dat"); // Suggests filename
+        headers.setContentLength(payslipContent.length);
+
+        return ResponseEntity.ok().headers(headers).body(payslipContent);
     }
 } 

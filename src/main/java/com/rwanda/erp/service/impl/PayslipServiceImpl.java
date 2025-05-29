@@ -192,6 +192,23 @@ public class PayslipServiceImpl implements PayslipService {
         // TODO: Integrate with actual email sending mechanism
     }
 
+    @Override
+    public byte[] downloadPayslip(String id, String authenticatedUserEmail) {
+        Payslip payslip = payslipRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Payslip not found")); // TODO: Custom exception
+
+        // Access control check: Employee can only download their own payslip
+        if (!payslip.getEmployee().getEmail().equals(authenticatedUserEmail)) {
+            // Note: ADMIN and MANAGER roles are checked in the controller's @PreAuthorize
+             throw new RuntimeException("Access denied: You can only download your own payslip."); // TODO: Custom exception
+        }
+
+        // TODO: Implement actual file generation (e.g., PDF, Excel) from payslip data
+        // For now, returning a placeholder byte array
+        String placeholderContent = "Payslip details for " + payslip.getEmployee().getFirstName() + " - " + payslip.getMonth() + "/" + payslip.getYear();
+        return placeholderContent.getBytes();
+    }
+
     private PayslipResponse mapPayslipToPayslipResponse(Payslip payslip) {
         PayslipResponse response = new PayslipResponse();
         response.setId(payslip.getId());

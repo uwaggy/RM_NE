@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +61,21 @@ public class EmployeeController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable String code) {
         EmployeeResponse employee = employeeService.getEmployeeById(code);
+        return ResponseEntity.ok(employee);
+    }
+
+    @Operation(summary = "Get details of the authenticated employee", description = "Allows an authenticated employee to view their own details. Requires ROLE_EMPLOYEE.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved employee details"),
+            @ApiResponse(responseCode = "404", description = "Employee not found (should not happen for authenticated user)"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Not authenticated or insufficient privileges")
+    })
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('EMPLOYEE')") // Or hasAnyRole('EMPLOYEE', 'ADMIN', 'MANAGER') if needed
+    public ResponseEntity<EmployeeResponse> getAuthenticatedEmployeeDetails() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = authentication.getName(); // Get email (principal) from security context
+        EmployeeResponse employee = employeeService.getEmployeeByEmail(authenticatedEmail);
         return ResponseEntity.ok(employee);
     }
 

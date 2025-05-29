@@ -78,6 +78,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.deleteById(code);
     }
 
+    @Override
+    public EmployeeResponse getEmployeeByEmail(String email) {
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Employee not found with email: " + email)); // TODO: Custom exception handling
+        return mapEmployeeToEmployeeResponse(employee);
+    }
+
     private EmployeeResponse mapEmployeeToEmployeeResponse(Employee employee) {
         EmployeeResponse response = new EmployeeResponse();
         response.setCode(employee.getCode());
